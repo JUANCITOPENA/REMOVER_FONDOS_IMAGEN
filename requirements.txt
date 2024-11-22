@@ -1,0 +1,6 @@
+streamlit
+rembg
+Pillow
+numpy
+scikit-image
+onnxruntime
