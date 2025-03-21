@@ -83,11 +83,11 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.header("Imagen original")
-                    st.image(image, caption="Imagen original", use_column_width=True)
+                    st.image(image, caption="Imagen original", use_container_width=True)  # Cambiado
 
                 with col2:
                     st.header("Imagen sin fondo")
-                    st.image(img_no_bg, caption="Imagen sin fondo", use_column_width=True)
+                    st.image(img_no_bg, caption="Imagen sin fondo", use_container_width=True)  # Cambiado
 
         except Exception as e:
             st.error(f"Error al procesar la imagen: {e}")
