@@ -3,26 +3,21 @@ from rembg import remove
 from PIL import Image, ImageEnhance
 import io
 import time
-import onnxruntime as ort
 
 def enhance_image(image):
-    # Mejorar la imagen antes de procesarla para mejor precisión
+    """Mejora el contraste de la imagen para optimizar la eliminación del fondo."""
     enhancer = ImageEnhance.Contrast(image)
-    image = enhancer.enhance(1.5)  # Aumentar el contraste
-    return image
+    return enhancer.enhance(1.5)  # Aumentar el contraste
 
 def main():
     st.title("🖼️ REMOVER FONDO DE IMÁGENES ✂️")
 
-    # Subtítulo
     st.markdown(
-        """
-        <h4 style='text-align: center; color: gray;'>Creado por Juancito Peña</h4>
-        """,
+        "<h4 style='text-align: center; color: gray;'>Creado por Juancito Peña</h4>",
         unsafe_allow_html=True
     )
 
-    # CSS personalizado para cambiar el fondo y estilo del texto
+    # CSS personalizado
     st.markdown(
         """
         <style>
@@ -41,54 +36,50 @@ def main():
     )
 
     # Inicializar el estado de sesión
-    if 'processed_image' not in st.session_state:
+    if "processed_image" not in st.session_state:
         st.session_state.processed_image = None
         st.session_state.image = None
         st.session_state.uploaded_file_name = None
-        st.session_state.processing = False
 
-    # Subir la imagen
     uploaded_file = st.file_uploader("Elige un archivo de imagen (PNG, JPG, JPEG)", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
         try:
-            # Verificar si el archivo es diferente al anterior
             if st.session_state.uploaded_file_name != uploaded_file.name:
-                # Cargar la imagen subida
-                image = Image.open(uploaded_file)
+                image = Image.open(uploaded_file).convert("RGBA")  # Convertir a RGBA para mejor procesamiento
                 st.session_state.image = image
                 st.session_state.uploaded_file_name = uploaded_file.name
-                st.session_state.processed_image = None  # Reiniciar imagen procesada
+                st.session_state.processed_image = None  
 
-                # Mejorar la imagen antes de remover el fondo
                 enhanced_image = enhance_image(image)
 
-                # Mostrar un indicador de progreso
+                # Simular progreso
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-
-                # Simular el progreso mientras se procesa la imagen
-                st.session_state.processing = True
-                for percent_complete in range(0, 101, 20):
-                    time.sleep(0.5)  # Simulación de tiempo de proceso
+                
+                for percent_complete in range(0, 100, 20):
+                    time.sleep(0.3)
                     progress_bar.progress(percent_complete)
                     status_text.text(f"Procesando... {percent_complete}%")
 
-                # Convertir la imagen mejorada a bytes
+                # Convertir imagen mejorada a bytes
                 img_byte_arr = io.BytesIO()
-                enhanced_image.save(img_byte_arr, format='PNG')
-                img_byte_arr = img_byte_arr.getvalue()
+                enhanced_image.save(img_byte_arr, format="PNG")
+                img_bytes = img_byte_arr.getvalue()
 
-                # Remover el fondo
-                result = remove(img_byte_arr)
+                # Remover fondo
+                result_bytes = remove(img_bytes)
 
-                # Guardar el resultado en session_state
-                st.session_state.processed_image = result
+                # Convertir la imagen resultante
+                img_no_bg = Image.open(io.BytesIO(result_bytes)).convert("RGBA")
 
-                # Convertir el resultado a imagen
-                img_no_bg = Image.open(io.BytesIO(result))
+                st.session_state.processed_image = img_no_bg  # Guardar la imagen procesada en session_state
 
-                # Mostrar las imágenes
+                # Ocultar el progreso
+                progress_bar.empty()
+                status_text.markdown('<div class="green-bg">Procesamiento completado.</div>', unsafe_allow_html=True)
+
+                # Mostrar imágenes originales y procesadas
                 col1, col2 = st.columns(2)
                 with col1:
                     st.header("Imagen original")
@@ -98,27 +89,25 @@ def main():
                     st.header("Imagen sin fondo")
                     st.image(img_no_bg, caption="Imagen sin fondo", use_column_width=True)
 
-                # Ocultar el texto y barra de progreso al finalizar
-                progress_bar.empty()
-                status_text.markdown('<div class="green-bg">Procesamiento completado.</div>', unsafe_allow_html=True)
-                st.session_state.processing = False
         except Exception as e:
             st.error(f"Error al procesar la imagen: {e}")
 
     if st.session_state.processed_image is not None:
-        # Opciones de formato de descarga
         st.markdown("### Selecciona el formato de descarga")
         format_option = st.selectbox("Formato", ["PNG", "JPEG"])
 
-        # Botón para descargar la imagen sin fondo
-        download_format = "image/png" if format_option == "PNG" else "image/jpeg"
+        # Convertir imagen a bytes para la descarga
+        img_bytes_io = io.BytesIO()
+        img_format = "PNG" if format_option == "PNG" else "JPEG"
+        st.session_state.processed_image.save(img_bytes_io, format=img_format)
+        img_bytes_io.seek(0)
+
         st.download_button(
             label="Descargar imagen sin fondo",
-            data=st.session_state.processed_image,
+            data=img_bytes_io,
             file_name=f"imagen_sin_fondo.{format_option.lower()}",
-            mime=download_format
+            mime=f"image/{format_option.lower()}"
         )
 
 if __name__ == "__main__":
     main()
- 
