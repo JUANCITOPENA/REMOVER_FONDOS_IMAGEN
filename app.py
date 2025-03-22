@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 from rembg import remove
 from PIL import Image, ImageEnhance
 import io
