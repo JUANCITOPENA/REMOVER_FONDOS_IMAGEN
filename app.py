@@ -1,31 +1,13 @@
-import streamlit as st
+ import streamlit as st
 from rembg import remove
 from PIL import Image, ImageEnhance
 import io
 import time
-import base64
 
 def enhance_image(image):
     """Mejora el contraste de la imagen para optimizar la eliminación del fondo."""
     enhancer = ImageEnhance.Contrast(image)
-    return enhancer.enhance(1.5)
-
-def get_download_link(img_bytes, format_option):
-    """
-    Genera un enlace HTML para descargar la imagen.
-    Se usa la codificación base64 para incrustar la imagen y un onClick
-    para recargar la página tras la descarga.
-    """
-    b64 = base64.b64encode(img_bytes).decode()
-    filename = f"imagen_sin_fondo.{format_option.lower()}"
-    # El script onClick recarga la página después de 100ms
-    href = (
-        f"<a href='data:image/{format_option.lower()};base64,{b64}' "
-        f"download='{filename}' "
-        f"onClick=\"setTimeout(() => window.location.reload(), 100)\">"
-        f"Descargar imagen sin fondo</a>"
-    )
-    return href
+    return enhancer.enhance(1.5)  # Aumentar el contraste
 
 def main():
     st.title("🖼️ REMOVER FONDO DE IMÁGENES ✂️")
@@ -63,9 +45,8 @@ def main():
 
     if uploaded_file is not None:
         try:
-            # Si se carga una imagen nueva, se procesa
             if st.session_state.uploaded_file_name != uploaded_file.name:
-                image = Image.open(uploaded_file).convert("RGBA")
+                image = Image.open(uploaded_file).convert("RGBA")  # Convertir a RGBA para mejor procesamiento
                 st.session_state.image = image
                 st.session_state.uploaded_file_name = uploaded_file.name
                 st.session_state.processed_image = None  
@@ -75,6 +56,7 @@ def main():
                 # Simular progreso
                 progress_bar = st.progress(0)
                 status_text = st.empty()
+                
                 for percent_complete in range(0, 100, 20):
                     time.sleep(0.3)
                     progress_bar.progress(percent_complete)
@@ -91,7 +73,7 @@ def main():
                 # Convertir la imagen resultante
                 img_no_bg = Image.open(io.BytesIO(result_bytes)).convert("RGBA")
 
-                st.session_state.processed_image = img_no_bg
+                st.session_state.processed_image = img_no_bg  # Guardar la imagen procesada en session_state
 
                 # Ocultar el progreso
                 progress_bar.empty()
@@ -101,10 +83,11 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.header("Imagen original")
-                    st.image(image, caption="Imagen original", use_container_width=True)
+                    st.image(image, caption="Imagen original", use_container_width=True)  # Cambiado
+
                 with col2:
                     st.header("Imagen sin fondo")
-                    st.image(img_no_bg, caption="Imagen sin fondo", use_container_width=True)
+                    st.image(img_no_bg, caption="Imagen sin fondo", use_container_width=True)  # Cambiado
 
         except Exception as e:
             st.error(f"Error al procesar la imagen: {e}")
@@ -113,20 +96,18 @@ def main():
         st.markdown("### Selecciona el formato de descarga")
         format_option = st.selectbox("Formato", ["PNG", "JPEG"])
 
-        # Convertir imagen a bytes según el formato seleccionado
+        # Convertir imagen a bytes para la descarga
         img_bytes_io = io.BytesIO()
         img_format = "PNG" if format_option == "PNG" else "JPEG"
         st.session_state.processed_image.save(img_bytes_io, format=img_format)
-        img_bytes = img_bytes_io.getvalue()
+        img_bytes_io.seek(0)
 
-        # Mostrar enlace de descarga que recarga la página al hacer clic
-        download_link = get_download_link(img_bytes, format_option)
-        st.markdown(download_link, unsafe_allow_html=True)
-
-        # También se ofrece un botón alternativo para limpiar manualmente
-        if st.button("🔄 Limpiar y comenzar de nuevo"):
-            st.session_state.clear()
-            st.experimental_rerun()
+        st.download_button(
+            label="💾 Descargar imagen sin fondo",
+            data=img_bytes_io,
+            file_name=f"imagen_sin_fondo.{format_option.lower()}",
+            mime=f"image/{format_option.lower()}"
+        )
 
 if __name__ == "__main__":
     main()
