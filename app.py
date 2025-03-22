@@ -7,7 +7,7 @@ import time
 def enhance_image(image):
     """Mejora el contraste de la imagen para optimizar la eliminación del fondo."""
     enhancer = ImageEnhance.Contrast(image)
-    return enhancer.enhance(1.5)  # Aumentar el contraste
+    return enhancer.enhance(1.5)
 
 def main():
     st.title("🖼️ REMOVER FONDO DE IMÁGENES ✂️")
@@ -46,7 +46,7 @@ def main():
     if uploaded_file is not None:
         try:
             if st.session_state.uploaded_file_name != uploaded_file.name:
-                image = Image.open(uploaded_file).convert("RGBA")  # Convertir a RGBA para mejor procesamiento
+                image = Image.open(uploaded_file).convert("RGBA")
                 st.session_state.image = image
                 st.session_state.uploaded_file_name = uploaded_file.name
                 st.session_state.processed_image = None  
@@ -73,22 +73,21 @@ def main():
                 # Convertir la imagen resultante
                 img_no_bg = Image.open(io.BytesIO(result_bytes)).convert("RGBA")
 
-                st.session_state.processed_image = img_no_bg  # Guardar la imagen procesada en session_state
+                st.session_state.processed_image = img_no_bg  # Guardar en session_state
 
                 # Ocultar el progreso
                 progress_bar.empty()
                 status_text.markdown('<div class="green-bg">Procesamiento completado.</div>', unsafe_allow_html=True)
 
-                # Mostrar imágenes originales y procesadas
+                # Mostrar imágenes
                 col1, col2 = st.columns(2)
                 with col1:
                     st.header("Imagen original")
                     st.image(image, caption="Imagen original", use_container_width=True)
-
                 with col2:
                     st.header("Imagen sin fondo")
                     st.image(img_no_bg, caption="Imagen sin fondo", use_container_width=True)
-
+        
         except Exception as e:
             st.error(f"Error al procesar la imagen: {e}")
 
@@ -109,11 +108,12 @@ def main():
             mime=f"image/{format_option.lower()}"
         )
 
-        # Botón para limpiar y recargar la página usando JavaScript
+        # Botón para limpiar
         if st.button("🔄 Limpiar y comenzar de nuevo"):
-            st.session_state.clear()
-            # Inyectamos un script para recargar la página
-            st.markdown("<script>window.location.reload()</script>", unsafe_allow_html=True)
+            st.session_state.processed_image = None
+            st.session_state.image = None
+            st.session_state.uploaded_file_name = None
+            st.rerun()
 
 if __name__ == "__main__":
     main()
