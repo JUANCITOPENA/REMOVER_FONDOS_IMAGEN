@@ -9,11 +9,6 @@ def enhance_image(image):
     enhancer = ImageEnhance.Contrast(image)
     return enhancer.enhance(1.5)  # Aumentar el contraste
 
-def clear_app_state():
-    """Función de callback para limpiar el estado y reiniciar la app."""
-    st.session_state.clear()
-    st.experimental_rerun()
-
 def main():
     st.title("🖼️ REMOVER FONDO DE IMÁGENES ✂️")
 
@@ -40,7 +35,7 @@ def main():
         unsafe_allow_html=True
     )
 
-    # Inicializar el estado de sesión si aún no existe
+    # Inicializar el estado de sesión
     if "processed_image" not in st.session_state:
         st.session_state.processed_image = None
         st.session_state.image = None
@@ -114,8 +109,11 @@ def main():
             mime=f"image/{format_option.lower()}"
         )
 
-        # Botón para limpiar y recargar la página usando un callback
-        st.button("🔄 Limpiar y comenzar de nuevo", on_click=clear_app_state)
+        # Botón para limpiar y recargar la página usando JavaScript
+        if st.button("🔄 Limpiar y comenzar de nuevo"):
+            st.session_state.clear()
+            # Inyectamos un script para recargar la página
+            st.markdown("<script>window.location.reload()</script>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
