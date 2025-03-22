@@ -102,7 +102,7 @@ def main():
         img_bytes_io.seek(0)
 
         st.download_button(
-            label="Descargar imagen sin fondo",
+            label="💾 Descargar imagen sin fondo",
             data=img_bytes_io,
             file_name=f"imagen_sin_fondo.{format_option.lower()}",
             mime=f"image/{format_option.lower()}"
